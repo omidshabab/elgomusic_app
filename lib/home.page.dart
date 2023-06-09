@@ -4,6 +4,7 @@ import 'package:elgomusic/darkmode.extension.dart';
 import 'package:figma_squircle/figma_squircle.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:iconly/iconly.dart';
 import 'package:ionicons/ionicons.dart';
@@ -21,7 +22,7 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  bool islist = true;
+  bool islist = false;
 
   // Define on audio plugin
   final OnAudioQuery _audioQuery = OnAudioQuery();
@@ -30,7 +31,7 @@ class _HomePageState extends State<HomePage> {
   final AudioPlayer _player = AudioPlayer();
 
   List<SongModel> songs = [];
-  String currentSongTitle = "";
+  String currentSongTitle = "نام آهنگ";
   int currentIndex = 0;
 
   bool isPlayerViewVisible = false;
@@ -73,6 +74,7 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     if (isPlayerViewVisible) {
+      print("Song: $currentSongTitle");
       return Scaffold(
         body: SingleChildScrollView(
           child: Container(
@@ -111,20 +113,20 @@ class _HomePageState extends State<HomePage> {
                         currentSongTitle,
                         style: TextStyle(
                           color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
+                          fontSize: 20,
                         ),
                       ),
                       Text(
-                        "currentSongTitle",
+                        "نام آهنگ: $currentSongTitle",
                         style: TextStyle(
                           color: Colors.black,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 10,
+                          fontSize: 20,
                         ),
                       ),
                     ],
                   ),
+
+                  SizedBox(height: 30),
 
                   // Artwork container
                   Container(
@@ -132,6 +134,18 @@ class _HomePageState extends State<HomePage> {
                     height: 300,
                     decoration:
                         getDecoration(BoxShape.circle, Offset(2, 2), 2.0, 0.0),
+                    child: QueryArtworkWidget(
+                      id: 2,
+                      type: ArtworkType.AUDIO,
+                      artworkBorder: SmoothBorderRadius(
+                        cornerRadius: 12,
+                        cornerSmoothing: 0.5,
+                      ),
+                      nullArtworkWidget: Icon(
+                        Ionicons.musical_notes_outline,
+                        size: 150,
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -156,15 +170,13 @@ class _HomePageState extends State<HomePage> {
                 ),
               ),
               SmoothIconButton(
-                icon:
-                    // islist ?
-                    IconlyLight.category
-                // : Ionicons.reorder_two_outline
-                ,
+                icon: islist
+                    ? IconlyLight.category
+                    : Ionicons.reorder_two_outline,
                 onPressed: () {
-                  // setState(() {
-                  //   islist = !islist;
-                  // });
+                  setState(() {
+                    islist = !islist;
+                  });
                 },
               )
             ],
@@ -263,7 +275,6 @@ class _HomePageState extends State<HomePage> {
               }
 
               return ListView(
-                key: PageStorageKey("home"),
                 shrinkWrap: true,
                 physics: BouncingScrollPhysics(
                   parent: ClampingScrollPhysics(),
@@ -284,6 +295,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                     ),
                     ListView.builder(
+                      key: PageStorageKey<String>("musics-list"),
                       shrinkWrap: true,
                       physics: NeverScrollableScrollPhysics(),
                       itemCount: item.data!.length,
@@ -376,34 +388,68 @@ class _HomePageState extends State<HomePage> {
 
                   // Grid
                   if (!islist) ...[
-                    SingleChildScrollView(
-                      key: PageStorageKey<String>("music"),
-                      scrollDirection: Axis.vertical,
-                      physics: const BouncingScrollPhysics(
-                        parent: AlwaysScrollableScrollPhysics(),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 15),
-                      child: Wrap(
-                        spacing: 15,
+                    SizedBox(height: 20),
+                    Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          ...List.generate(
-                            12,
-                            (index) => Container(),
-                          ),
-                          GridView.builder(
-                            gridDelegate:
-                                SliverGridDelegateWithFixedCrossAxisCount(
-                              crossAxisCount: 2,
-                              crossAxisSpacing: 10.0,
-                              mainAxisSpacing: 10.0,
-                            ),
-                            itemCount:
-                                10, // Replace with your actual item count
-                            itemBuilder: (BuildContext context, int index) {
-                              return Text("item");
-                            },
-                          ),
+                          Text("تعداد موزیک ها"),
+                          Text("${item.data?.length}"),
                         ],
+                      ),
+                    ),
+                    Flexible(
+                      child: Container(
+                        padding: EdgeInsets.symmetric(horizontal: 16),
+                        child: StaggeredGridView.countBuilder(
+                          key: PageStorageKey<String>("musics-grid"),
+                          shrinkWrap: true,
+                          scrollDirection: Axis.vertical,
+                          physics: NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          crossAxisCount: 4,
+                          itemCount: item.data?.length,
+                          itemBuilder: (BuildContext context, int index) =>
+                              Column(
+                            children: [
+                              AspectRatio(
+                                aspectRatio: 1 / 1,
+                                child: Container(
+                                  width: double.infinity,
+                                  decoration: BoxDecoration(
+                                    color: Colors.black.withOpacity(0.01),
+                                    borderRadius: SmoothBorderRadius(
+                                      cornerRadius: 20,
+                                      cornerSmoothing: 0.5,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              SizedBox(height: 15),
+                              Text(
+                                "${item.data?[index].displayName}",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 15),
+                              ),
+                              SizedBox(height: 8),
+                              Text(
+                                "${item.data?[index].artist}",
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                textAlign: TextAlign.center,
+                                style: TextStyle(fontSize: 12),
+                              ),
+                            ],
+                          ),
+                          staggeredTileBuilder: (int index) =>
+                              StaggeredTile.count(2, 3),
+                          mainAxisSpacing: 10,
+                          crossAxisSpacing: 10,
+                        ),
                       ),
                     ),
                   ]

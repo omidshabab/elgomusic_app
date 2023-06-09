@@ -10,7 +10,7 @@
     <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>
     
     <application
-        android:label="easymusic_app"
+        android:label="Elgo Music"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
